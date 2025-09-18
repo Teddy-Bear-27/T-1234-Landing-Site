@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>T-1234 Landing Site</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #1a1a1a;
+      font-family: 'JetBrains Mono', monospace;
+      overflow: hidden;
+    }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let projects = [
+  { title: "Project One", description: "Module 1 deployed.", link: "https://example.com/1" },
+  { title: "Project Two", description: "Module 2 deployed.", link: "https://example.com/2" },
+  { title: "Project Three", description: "Module 3 deployed.", link: "https://example.com/3" },
+  { title: "Project Four", description: "Module 4 deployed.", link: "https://example.com/4" },
+  { title: "Project Five", description: "Module 5 deployed.", link: "https://example.com/5" },
+  { title: "Project Six", description: "Module 6 deployed.", link: "https://example.com/6" }
+];
+const cardRects = [];
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  draw();
+}
+window.addEventListener('resize', resize);
+
+function roundRectPath(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function fillRoundedRect(x, y, w, h, r, color) {
+  roundRectPath(x, y, w, h, r);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function strokeRoundedRect(x, y, w, h, r, color, lw = 1) {
+  roundRectPath(x, y, w, h, r);
+  ctx.lineWidth = lw;
+  ctx.strokeStyle = color;
+  ctx.stroke();
+}
+
+function wrapText(text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ');
+  let line = '';
+  for (let n = 0; n < words.length; n++) {
+    const testLine = line + words[n] + ' ';
+    if (ctx.measureText(testLine).width > maxWidth && n > 0) {
+      ctx.fillText(line, x, y);
+      line = words[n] + ' ';
+      y += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+  ctx.fillText(line, x, y);
+}
+
+function draw() {
+  const W = canvas.width;
+  const H = canvas.height;
+  cardRects.length = 0;
+
+  // Background
+  const gradient = ctx.createLinearGradient(0, 0, W, H);
+  gradient.addColorStop(0, '#1a1a1a');
+  gradient.addColorStop(1, '#2a2a2a');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, W, H);
+
+  // Header
+  ctx.shadowColor = '#66ccff';
+  ctx.shadowBlur = 15;
+  ctx.fillStyle = '#66ccff';
+  ctx.font = '3em JetBrains Mono';
+  ctx.textAlign = 'center';
+  ctx.fillText('T-1234 Landing Site', W / 2, 60);
+  ctx.shadowBlur = 0;
+  ctx.font = '1.2em JetBrains Mono';
+  ctx.fillStyle = '#cc4444';
+  ctx.fillText('System Online. Identity Locked.', W / 2, 100);
+
+  // Grid: 3 columns x 2 rows
+  const COLS = 3;
+  const ROWS = 2;
+  const PADDING = 24;
+  const cardW = (W - PADDING * (COLS + 1)) / COLS;
+  const cardH = (H - 200 - PADDING * (ROWS + 1)) / ROWS;
+
+  projects.forEach((proj, i) => {
+    const col = i % COLS;
+    const row = Math.floor(i / COLS);
+    const x = PADDING + col * (cardW + PADDING);
+    const y = 140 + PADDING + row * (cardH + PADDING);
+
+    // Card background
+    fillRoundedRect(x, y, cardW, cardH, 10, '#222');
+    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+    ctx.shadowBlur = 10;
+    strokeRoundedRect(x, y, cardW, cardH, 10, 'rgba(0,0,0,0.2)', 1);
+    ctx.shadowBlur = 0;
+
+    // Image placeholder
+    const imgX = x + 12;
+    const imgY = y + 12;
+    const imgW = cardW - 24;
+    const imgH = cardH * 0.5;
+    fillRoundedRect(imgX, imgY, imgW, imgH, 6, '#333');
+    strokeRoundedRect(imgX, imgY, imgW, imgH, 6, '#555', 1.5);
+    ctx.fillStyle = '#888';
+    ctx.font = '0.8em JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText('Image Placeholder', imgX + imgW / 2, imgY + imgH / 2 + 6);
+
+    // Title
+    ctx.fillStyle = '#66ccff';
+    ctx.font = '1em JetBrains Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(proj.title, x + 12, imgY + imgH + 24);
+
+    // Description
+    ctx.fillStyle = '#d0d0d0';
+    ctx.font = '0.9em JetBrains Mono';
+    wrapText(proj.description, x + 12, imgY + imgH + 48, cardW - 24, 18);
+
+    cardRects.push({ x, y, w: cardW, h: cardH, link: proj.link });
+  });
+
+  // Footer
+  ctx.font = '0.8em JetBrains Mono';
+  ctx.fillStyle = '#888';
+  ctx.textAlign = 'center';
+  ctx.fillText('© 2025 T-1234 Systems. All protocols secured.', W / 2, H - 20);
+}
+
+// Click handler to open links
+canvas.addEventListener('click', (e) => {
+  const mx = e.clientX;
+  const my = e.clientY;
+  cardRects.forEach(rect => {
+    if (mx > rect.x && mx < rect.x + rect.w && my > rect.y && my < rect.y + rect.h) {
+      window.open(rect.link, '_blank');
+    }
+  });
+});
+
+resize();
+</script>
+</body>
+</html>
